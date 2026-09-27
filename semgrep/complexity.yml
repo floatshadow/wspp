@@ -1,0 +1,107 @@
+# Readability and needless-code checks analogous to Clippy's complexity group.
+rules:
+  - id: ocaml.complexity.boolean-comparison-true
+    languages: [ocaml]
+    severity: WARNING
+    message: Use the boolean expression directly instead of comparing it with true.
+    pattern-either:
+      - pattern: $VALUE = true
+      - pattern: true = $VALUE
+      - pattern: $VALUE <> false
+    metadata: { category: maintainability }
+
+  - id: ocaml.complexity.boolean-comparison-false
+    languages: [ocaml]
+    severity: WARNING
+    message: Use not on the boolean expression instead of comparing it with false.
+    pattern-either:
+      - pattern: $VALUE = false
+      - pattern: false = $VALUE
+      - pattern: $VALUE <> true
+    metadata: { category: maintainability }
+
+  - id: ocaml.complexity.boolean-if-identity
+    languages: [ocaml]
+    severity: WARNING
+    message: This conditional is the condition itself.
+    pattern: if $CONDITION then true else false
+    metadata: { category: maintainability }
+
+  - id: ocaml.complexity.boolean-if-negation
+    languages: [ocaml]
+    severity: WARNING
+    message: Replace this conditional with not applied to the condition.
+    pattern: if $CONDITION then false else true
+    metadata: { category: maintainability }
+
+  - id: ocaml.complexity.useless-else-unit
+    languages: [ocaml]
+    severity: WARNING
+    message: The unit else branch is unnecessary.
+    pattern: if $CONDITION then $BODY else ()
+    metadata: { category: maintainability }
+
+  - id: ocaml.complexity.backwards-if
+    languages: [ocaml]
+    severity: WARNING
+    message: Rewrite as if not CONDITION then BODY.
+    pattern: if $CONDITION then () else $BODY
+    metadata: { category: maintainability }
+
+  - id: ocaml.complexity.option-map
+    languages: [ocaml]
+    severity: WARNING
+    message: Replace this forwarding match with Option.map.
+    pattern: |
+      match $OPTION with
+      | Some $VALUE -> Some ($FUNCTION $VALUE)
+      | None -> None
+    metadata: { category: maintainability }
+
+  - id: ocaml.complexity.result-map
+    languages: [ocaml]
+    severity: WARNING
+    message: Replace this forwarding match with Result.map.
+    pattern: |
+      match $RESULT with
+      | Ok $VALUE -> Ok ($FUNCTION $VALUE)
+      | Error $ERROR -> Error $ERROR
+    metadata: { category: maintainability }
+
+  - id: ocaml.complexity.list-emptiness-match
+    languages: [ocaml]
+    severity: WARNING
+    message: Compare the list with [] directly.
+    pattern-either:
+      - pattern-regex: '(?s)\bmatch\s+[^\n]+?\s+with\s*\|?\s*\[\]\s*->\s*true\s*\|\s*_\s*->\s*false'
+      - pattern-regex: '(?s)\bmatch\s+[^\n]+?\s+with\s*\|?\s*\[\]\s*->\s*false\s*\|\s*_\s*->\s*true'
+    metadata: { category: maintainability }
+
+  - id: ocaml.complexity.eta-reduction
+    languages: [ocaml]
+    severity: WARNING
+    message: This lambda only forwards its argument; use the function directly.
+    patterns:
+      - pattern: fun $ARGUMENT -> $FUNCTION $ARGUMENT
+      - metavariable-regex:
+          metavariable: $FUNCTION
+          regex: "^(?:[A-Z][a-zA-Z0-9_']*\\.)*[a-z_][a-zA-Z0-9_']*$"
+    metadata: { category: maintainability }
+
+  - id: ocaml.complexity.manual-ref-increment
+    languages: [ocaml]
+    severity: WARNING
+    message: Use incr/decr for a one-step ref update.
+    pattern-either:
+      - pattern: $REF := ! $REF + 1
+      - pattern: $REF := ! $REF - 1
+    metadata: { category: maintainability }
+
+  - id: ocaml.complexity.useless-sprintf
+    languages: [ocaml]
+    severity: WARNING
+    message: Return the literal/value directly instead of formatting it unchanged.
+    pattern-either:
+      - pattern: Printf.sprintf "..."
+      - pattern: Printf.sprintf "%s" $STRING
+    metadata: { category: maintainability }

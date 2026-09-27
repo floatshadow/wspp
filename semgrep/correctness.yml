@@ -1,0 +1,61 @@
+# High-confidence bug patterns. These rules block commits.
+rules:
+  - id: ocaml.correctness.useless-equality
+    languages: [ocaml]
+    severity: ERROR
+    message: This equality is always true; compare distinct expressions instead.
+    pattern: $VALUE = $VALUE
+    metadata: { category: correctness }
+
+  - id: ocaml.correctness.useless-compare
+    languages: [ocaml]
+    severity: ERROR
+    message: Comparing an expression with itself always returns zero.
+    pattern-either:
+      - pattern: compare $VALUE $VALUE
+      - pattern: $MODULE.compare $VALUE $VALUE
+    metadata: { category: correctness }
+
+  - id: ocaml.correctness.identical-if-branches
+    languages: [ocaml]
+    severity: ERROR
+    message: Both branches are identical; remove the conditional.
+    pattern: if $CONDITION then $BRANCH else $BRANCH
+    metadata: { category: correctness }
+
+  - id: ocaml.correctness.useless-let
+    languages: [ocaml]
+    severity: ERROR
+    message: This let-binding immediately returns the bound value.
+    pattern: let $NAME = $VALUE in $NAME
+    metadata: { category: correctness }
+
+  - id: ocaml.correctness.catch-all-exception
+    languages: [ocaml]
+    severity: ERROR
+    message: Do not catch every exception; match the exceptions this code can handle.
+    pattern: try $BODY with | _ -> $HANDLER
+    metadata: { category: correctness }
+
+  - id: ocaml.correctness.option-get
+    languages: [ocaml]
+    severity: ERROR
+    message: Option.get raises without context; match explicitly or use a descriptive _exn helper.
+    pattern: Option.get $VALUE
+    metadata: { category: correctness }
+
+  - id: ocaml.correctness.result-get
+    languages: [ocaml]
+    severity: ERROR
+    message: This partial Result accessor discards useful error context; match explicitly instead.
+    pattern-either:
+      - pattern: Result.get_ok $VALUE
+      - pattern: Result.get_error $VALUE
+    metadata: { category: correctness }
+
+  - id: ocaml.correctness.accidental-self-pair-match
+    languages: [ocaml]
+    severity: ERROR
+    message: Both sides of this pair are the same expression; check for a copy/paste mistake.
+    pattern: match $VALUE, $VALUE with ... -> ...
+    metadata: { category: correctness }

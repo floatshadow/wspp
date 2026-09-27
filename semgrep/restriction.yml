@@ -1,0 +1,156 @@
+# Dangerous, deprecated, or trust-boundary APIs. Most are audits because the
+# safety depends on data provenance and a local invariant.
+rules:
+  - id: ocaml.restriction.poly-equal
+    languages: [ocaml]
+    severity: ERROR
+    message: Use type-specific equality or pattern matching instead of Poly.equal.
+    pattern-either:
+      - pattern: Poly.equal
+      - pattern: Core.Poly.equal
+      - pattern: Base.Poly.equal
+    metadata: { category: maintainability }
+
+  - id: ocaml.restriction.obj-magic
+    languages: [ocaml]
+    severity: ERROR
+    message: Obj.magic defeats the type system; replace it with a typed representation.
+    pattern: Obj.magic $VALUE
+    metadata: { category: security }
+
+  - id: ocaml.restriction.pervasives
+    languages: [ocaml]
+    severity: ERROR
+    message: Pervasives is deprecated; use Stdlib explicitly.
+    pattern: Pervasives.$MEMBER
+    metadata: { category: compatibility }
+
+  - id: ocaml.restriction.deprecated-case-conversion
+    languages: [ocaml]
+    severity: ERROR
+    message: Use the explicit *_ascii case-conversion function.
+    pattern-either:
+      - pattern: String.lowercase
+      - pattern: String.uppercase
+      - pattern: Char.lowercase
+      - pattern: Char.uppercase
+    metadata: { category: compatibility }
+
+  - id: ocaml.restriction.shell-command
+    languages: [ocaml]
+    severity: WARNING
+    message: A dynamic shell command can allow command injection; prefer argv-based process APIs.
+    patterns:
+      - pattern-either:
+          - pattern: Unix.system $COMMAND
+          - pattern: Sys.command $COMMAND
+          - pattern: Unix.open_process_in $COMMAND
+          - pattern: Unix.open_process_out $COMMAND
+          - pattern: Unix.open_process $COMMAND
+          - pattern: Unix.open_process_full $COMMAND $ENVIRONMENT
+      - pattern-not: Unix.system "..."
+      - pattern-not: Sys.command "..."
+      - pattern-not: Unix.open_process_in "..."
+      - pattern-not: Unix.open_process_out "..."
+      - pattern-not: Unix.open_process "..."
+      - pattern-not: Unix.open_process_full "..." $ENVIRONMENT
+    metadata: { category: security }
+
+  - id: ocaml.restriction.dynamic-exec
+    languages: [ocaml]
+    severity: WARNING
+    message: Validate executable paths and arguments before starting an external process.
+    pattern-either:
+      - pattern: Unix.execv $PROGRAM ...
+      - pattern: Unix.execve $PROGRAM ...
+      - pattern: Unix.execvp $PROGRAM ...
+      - pattern: Unix.execvpe $PROGRAM ...
+    metadata: { category: security }
+
+  - id: ocaml.restriction.unsafe-deserialization
+    languages: [ocaml]
+    severity: WARNING
+    message: Marshal input is not type-safe; never deserialize data from an untrusted source.
+    pattern-either:
+      - pattern: input_value $CHANNEL
+      - pattern: Marshal.from_channel $CHANNEL
+      - pattern: Marshal.from_bytes $BYTES $OFFSET
+      - pattern: Marshal.from_string $STRING $OFFSET
+    metadata: { category: security }
+
+  - id: ocaml.restriction.md5-digest
+    languages: [ocaml]
+    severity: WARNING
+    message: Digest implements MD5; use a modern hash for security-sensitive data.
+    pattern-either:
+      - pattern: Digest.string
+      - pattern: Digest.bytes
+      - pattern: Digest.substring
+      - pattern: Digest.subbytes
+      - pattern: Digest.channel
+      - pattern: Digest.file
+    metadata: { category: security }
+
+  - id: ocaml.restriction.unsafe-stdlib-api
+    languages: [ocaml]
+    severity: WARNING
+    message: This unsafe API skips checks; document and verify the invariant or use the checked operation.
+    pattern-either:
+      - pattern: Array.unsafe_get
+      - pattern: Array.unsafe_set
+      - pattern: Bytes.unsafe_get
+      - pattern: Bytes.unsafe_set
+      - pattern: Bytes.unsafe_to_string
+      - pattern: Bytes.unsafe_of_string
+      - pattern: String.unsafe_get
+      - pattern: Char.unsafe_chr
+      - pattern: Obj.set_field
+    metadata: { category: security }
+
+  - id: ocaml.restriction.dynamic-code-loading
+    languages: [ocaml]
+    severity: WARNING
+    message: Dynamic code loading crosses a trust boundary; validate the artifact before loading it.
+    pattern-either:
+      - pattern: Dynlink.loadfile $PATH
+      - pattern: Dynlink.loadfile_private $PATH
+    metadata: { category: security }
+
+  - id: ocaml.restriction.hardcoded-tmp
+    languages: [ocaml]
+    severity: WARNING
+    message: Use Filename.get_temp_dir_name instead of a hard-coded /tmp path.
+    pattern-regex: '"/tmp(?:/[^"\\]*)?"'
+    metadata: { category: portability }
+
+  - id: ocaml.restriction.raw-mutex-lock
+    languages: [ocaml]
+    severity: WARNING
+    message: Raw Mutex.lock is not exception-safe; use Mutex.protect so the lock is always released.
+    pattern: Mutex.lock $MUTEX
+    metadata: { category: correctness }
+
+  - id: ocaml.restriction.raw-channel-open
+    languages: [ocaml]
+    severity: WARNING
+    message: Prefer In_channel.with_file/Out_channel.with_file so channels close on every path.
+    pattern-either:
+      - pattern: open_in $PATH
+      - pattern: open_in_bin $PATH
+      - pattern: open_out $PATH
+      - pattern: open_out_bin $PATH
+    metadata: { category: correctness }
+
+  - id: ocaml.restriction.filename-concat
+    languages: [ocaml]
+    severity: WARNING
+    message: If either component is untrusted, validate it before Filename.concat to prevent path traversal.
+    pattern: Filename.concat $DIRECTORY $NAME
+    metadata: { category: security }
+
+  - id: ocaml.restriction.temp-file
+    languages: [ocaml]
+    severity: WARNING
+    message: Review temporary-file permissions, cleanup, and the time between creation and use.
+    pattern: Filename.temp_file $PREFIX $SUFFIX
+    metadata: { category: security }

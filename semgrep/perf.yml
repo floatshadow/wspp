@@ -1,0 +1,60 @@
+# Clippy-like performance checks for avoidable traversals and stack growth.
+rules:
+  - id: ocaml.perf.list-length-emptiness
+    languages: [ocaml]
+    severity: WARNING
+    message: Use List.is_empty instead of traversing the list with List.length.
+    pattern-either:
+      - pattern: List.length $LIST = 0
+      - pattern: 0 = List.length $LIST
+      - pattern: List.length $LIST > 0
+      - pattern: List.length $LIST <> 0
+    metadata: { category: performance }
+
+  - id: ocaml.perf.map-then-flatten
+    languages: [ocaml]
+    severity: WARNING
+    message: Use List.concat_map to avoid constructing an intermediate list.
+    pattern-either:
+      - pattern: List.map $FUNCTION $LIST |> List.flatten
+      - pattern: List.map $FUNCTION $LIST |> List.concat
+      - pattern: List.flatten (List.map $FUNCTION $LIST)
+      - pattern: List.concat (List.map $FUNCTION $LIST)
+    metadata: { category: performance }
+
+  - id: ocaml.perf.double-list-reverse
+    languages: [ocaml]
+    severity: WARNING
+    message: Reversing a list twice is redundant; preserve the original list.
+    pattern-either:
+      - pattern: List.rev (List.rev $LIST)
+      - pattern: $LIST |> List.rev |> List.rev
+    metadata: { category: performance }
+
+  - id: ocaml.perf.fold-right-stack-growth
+    languages: [ocaml]
+    severity: WARNING
+    message: List.fold_right may consume linear stack; prefer a tail-recursive fold for large lists.
+    pattern: List.fold_right
+    metadata: { category: performance }
+
+  - id: ocaml.perf.non-tail-list-combinator
+    languages: [ocaml]
+    severity: WARNING
+    message: This Stdlib list combinator may consume linear stack; verify input bounds or use a tail-recursive alternative.
+    pattern-either:
+      - pattern: List.map2
+      - pattern: List.combine
+      - pattern: List.split
+      - pattern: List.concat
+      - pattern: List.flatten
+    metadata: { category: performance }
+
+  - id: ocaml.perf.append-in-recursive-function
+    languages: [ocaml]
+    severity: WARNING
+    message: List append inside recursion can become quadratic; accumulate with cons and reverse once.
+    patterns:
+      - pattern-inside: let rec $FUNCTION ... = ...
+      - pattern: $LEFT @ $RIGHT
+    metadata: { category: performance }

@@ -1,0 +1,99 @@
+# Project-specific house style. These rules encode preferences that OCamlFormat
+# and compiler warnings cannot express.
+rules:
+  - id: ocaml.pedantic.failwith-concatenation
+    languages: [ocaml]
+    severity: ERROR
+    message: Build failwith messages with [%string "..."] interpolation, not (^).
+    pattern: failwith ($LEFT ^ $RIGHT)
+    metadata: { category: maintainability }
+
+  - id: ocaml.pedantic.failwith-printf
+    languages: [ocaml]
+    severity: ERROR
+    message: Build failwith messages with [%string "..."] interpolation, not printf formatting.
+    pattern-either:
+      - pattern: failwith (Printf.sprintf $FORMAT ...)
+      - pattern: failwith (Format.asprintf $FORMAT ...)
+      - pattern: failwith (sprintf $FORMAT ...)
+    metadata: { category: maintainability }
+
+  - id: ocaml.pedantic.raise-failure-directly
+    languages: [ocaml]
+    severity: ERROR
+    message: Use failwith for Failure, or define a named exception when callers must distinguish it.
+    pattern: raise (Failure $MESSAGE)
+    metadata: { category: maintainability }
+
+  - id: ocaml.pedantic.raise-invalid-argument-directly
+    languages: [ocaml]
+    severity: ERROR
+    message: Use invalid_arg rather than constructing Invalid_argument directly.
+    pattern: raise (Invalid_argument $MESSAGE)
+    metadata: { category: maintainability }
+
+  - id: ocaml.pedantic.core-unlabelled-list-callback
+    languages: [ocaml]
+    severity: WARNING
+    message: This project uses Core; pass the list first and the callback with ~f.
+    pattern-either:
+      - pattern: List.map $FUNCTION $LIST
+      - pattern: List.mapi $FUNCTION $LIST
+      - pattern: List.iter $FUNCTION $LIST
+      - pattern: List.filter $FUNCTION $LIST
+      - pattern: List.filter_map $FUNCTION $LIST
+      - pattern: List.concat_map $FUNCTION $LIST
+      - pattern: List.exists $FUNCTION $LIST
+      - pattern: List.for_all $FUNCTION $LIST
+      - pattern: List.find_opt $FUNCTION $LIST
+    metadata: { category: maintainability }
+
+  - id: ocaml.pedantic.core-stdlib-list-fold
+    languages: [ocaml]
+    severity: WARNING
+    message: This project uses Core; prefer List.fold LIST ~init:INIT ~f:FUNCTION.
+    pattern-either:
+      - pattern: List.fold_left $FUNCTION $INITIAL $LIST
+      - pattern: List.fold_right $FUNCTION $LIST $INITIAL
+    metadata: { category: maintainability }
+
+  - id: ocaml.pedantic.pp-string-concatenation
+    languages: [ocaml]
+    severity: WARNING
+    message: Build pretty-printer output with PPrint documents instead of string concatenation.
+    patterns:
+      - pattern-either:
+          - pattern-inside: let $PRINTER ... = ...
+          - pattern-inside: let $PRINTER = ...
+      - metavariable-regex:
+          metavariable: $PRINTER
+          regex: "^pp_[a-zA-Z0-9_']*$"
+      - pattern: $LEFT ^ $RIGHT
+    metadata: { category: maintainability }
+
+  - id: ocaml.pedantic.pp-printf
+    languages: [ocaml]
+    severity: WARNING
+    message: A pp_* function should return a PPrint document, not format a string.
+    patterns:
+      - pattern-either:
+          - pattern-inside: let $PRINTER ... = ...
+          - pattern-inside: let $PRINTER = ...
+      - metavariable-regex:
+          metavariable: $PRINTER
+          regex: "^pp_[a-zA-Z0-9_']*$"
+      - pattern-either:
+          - pattern: Printf.sprintf $FORMAT ...
+          - pattern: Format.asprintf $FORMAT ...
+          - pattern: sprintf $FORMAT ...
+    metadata: { category: maintainability }
+
+  - id: ocaml.pedantic.unfinished-marker
+    languages: [generic]
+    severity: WARNING
+    message: Resolve this unfinished-code marker or link it to tracked work.
+    paths:
+      include: ["*.ml", "*.mli", "*.mll", "*.mly"]
+      exclude: [/_build/**, /_opam/**]
+    pattern-regex: '(?i)\b(?:TODO|FIXME|XXX)\b'
+    metadata: { category: maintainability }

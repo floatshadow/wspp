@@ -1,0 +1,93 @@
+# Potential bugs that sometimes have legitimate uses. Review or suppress locally.
+rules:
+  - id: ocaml.suspicious.physical-equality
+    languages: [ocaml]
+    severity: WARNING
+    message: Physical equality is rarely intended; use (=) unless object identity is required.
+    pattern: $LEFT == $RIGHT
+    metadata: { category: correctness }
+
+  - id: ocaml.suspicious.physical-inequality
+    languages: [ocaml]
+    severity: WARNING
+    message: Physical inequality is rarely intended; use (<>) unless object identity is required.
+    pattern: $LEFT != $RIGHT
+    metadata: { category: correctness }
+
+  - id: ocaml.suspicious.swallowed-exception
+    languages: [ocaml]
+    severity: WARNING
+    message: Silently discarding an exception hides failures; handle, report, or document it.
+    pattern: try $BODY with | $EXCEPTION -> ()
+    metadata: { category: correctness }
+
+  - id: ocaml.suspicious.reraise-loses-backtrace
+    languages: [ocaml]
+    severity: WARNING
+    message: Re-raising with raise resets the backtrace; preserve it with Printexc.raise_with_backtrace.
+    patterns:
+      - pattern: raise $EXCEPTION
+      - metavariable-regex:
+          metavariable: $EXCEPTION
+          regex: "^[a-z_][a-zA-Z0-9_']*$"
+    metadata: { category: correctness }
+
+  # Unqualified List and Hashtbl follow this repository's Core convention.
+  # These operations return options in Core/Base; only Stdlib calls are partial.
+  - id: ocaml.suspicious.partial-list-head-or-tail
+    languages: [ocaml]
+    severity: WARNING
+    message: Stdlib List.hd/List.tl raise on empty lists; match the list or use Core's option-returning APIs.
+    patterns:
+      - pattern-either:
+          - pattern: Stdlib.List.hd $LIST
+          - pattern: Stdlib.List.tl $LIST
+    metadata: { category: correctness }
+
+  - id: ocaml.suspicious.partial-list-find
+    languages: [ocaml]
+    severity: WARNING
+    message: Stdlib List.find raises Not_found; use find_opt or handle the exception.
+    patterns:
+      - pattern: Stdlib.List.find $FUNCTION $LIST
+      - pattern-not-inside: try ... with Not_found -> ...
+    metadata: { category: correctness }
+
+  - id: ocaml.suspicious.partial-list-nth
+    languages: [ocaml]
+    severity: WARNING
+    message: Stdlib List.nth raises on invalid indexes; use List.nth_opt or match the list.
+    pattern: Stdlib.List.nth $LIST $INDEX
+    metadata: { category: correctness }
+
+  - id: ocaml.suspicious.partial-hashtbl-find
+    languages: [ocaml]
+    severity: WARNING
+    message: Stdlib Hashtbl.find raises Not_found; use find_opt or handle the exception.
+    patterns:
+      - pattern: Stdlib.Hashtbl.find $TABLE $KEY
+      - pattern-not-inside: try ... with Not_found -> ...
+    metadata: { category: correctness }
+
+  - id: ocaml.suspicious.assert-false
+    languages: [ocaml]
+    severity: WARNING
+    message: Document the invariant that makes this branch impossible, or use a descriptive failure.
+    pattern: assert false
+    metadata: { category: correctness }
+
+  - id: ocaml.suspicious.ignored-result
+    languages: [ocaml]
+    severity: WARNING
+    message: Confirm that discarding this result cannot hide an error.
+    pattern-either:
+      - pattern: ignore ($FUNCTION ...)
+      - pattern: let _ = $FUNCTION ...
+    metadata: { category: correctness }
+
+  - id: ocaml.suspicious.printexc-without-backtrace
+    languages: [ocaml]
+    severity: WARNING
+    message: Printexc.to_string omits the backtrace; capture and report the backtrace where diagnostics matter.
+    pattern: Printexc.to_string $EXCEPTION
+    metadata: { category: correctness }

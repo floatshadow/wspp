@@ -1,0 +1,51 @@
+*.annot
+*.cmo
+*.cma
+*.cmi
+*.a
+*.o
+*.cmx
+*.cmxs
+*.cmxa
+
+# ocamlbuild working directory
+_build
+
+# ocamlbuild targets
+*.byte
+*.native
+
+# oasis generated files
+setup.data
+setup.log
+
+# Merlin configuring file for Vim and Emacs
+.merlin
+
+# Dune generated files
+*.install
+
+# Local OPAM switch
+_opam
+
+.vscode
+
+# temp debug files
+_debug_output
+
+# temp docs
+tmp.md
+
+# vscode
+.vscode
+
+# Agents
+.codex
+.claude
+.serena
+
+# Python nightly cache
+__pycache__/
+
+# PDFs
+*.pdf
