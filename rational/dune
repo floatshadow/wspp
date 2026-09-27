@@ -1,0 +1,6 @@
+(library
+ (name wspp_rational)
+ (public_name wspp.rational)
+ (libraries core wspp zarith)
+ (preprocess
+  (pps ppx_jane)))
