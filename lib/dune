@@ -1,0 +1,6 @@
+(library
+ (name wspp)
+ (public_name wspp)
+ (libraries core pprint)
+ (preprocess
+  (pps ppx_jane)))

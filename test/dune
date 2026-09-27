@@ -1,0 +1,6 @@
+(library
+ (name wspp_test)
+ (inline_tests)
+ (libraries core pprint wspp wspp.rational zarith)
+ (preprocess
+  (pps ppx_jane)))
